@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>不动如山</title>
+    <style>
+        /* ==========================================
+           1. 基础设置与字体引入
+           ========================================== */
+        @font-face {
+            font-family: 'CangerShuyuanL';
+            src: url('fonts/CangerShuyuanL.woff') format('woff');
+        }
+        @font-face {
+            font-family: 'ZhuanShu';
+            src: url('fonts/ZhuanShu.woff') format('woff'); 
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            user-select: none; -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000;
+            overflow: hidden;
+            width: 100vw; height: 100vh;
+            font-family: 'CangerShuyuanL', 'Microsoft YaHei', sans-serif;
+        }
+
+        /* ==========================================
+           2. 游戏主画布 (1080x2400 等比缩放)
+           ========================================== */
+        #game-container {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform-origin: center center;
+            background-color: #111;
+            overflow: hidden;
+            width: 1080px; height: 2400px;
+        }
+
+        /* ==========================================
+           3. 标题画面图层
+           ========================================== */
+        .layer-img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; opacity: 0; transition: opacity 0.6s;
+        }
+        .layer-img.visible { opacity: 1; }
+
+        #logo-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; display: flex; justify-content: center; align-items: center;
+            background-color: #000;
+        }
+        #logo-img { max-width: 60%; opacity: 0; transition: opacity 0.6s; }
+
+        #title-a { z-index: 1; }
+        #title-b { z-index: 3; }
+        #title-c { z-index: 5; }
+
+        /* 滚动文字层 */
+        #scroll-text-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 45%;
+            z-index: 2; pointer-events: none; 
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            display: flex; flex-direction: column; justify-content: space-evenly;
+            overflow: hidden;
+        }
+        .scroll-row { width: 100%; height: 14.28%; display: flex; align-items: center; overflow: hidden; }
+        .scroll-track {
+            display: flex; white-space: nowrap;
+            animation-timing-function: linear; animation-iteration-count: infinite; animation-duration: 30s;
+        }
+        .text-content {
+            font-family: 'ZhuanShu', 'KaiTi', serif; 
+            font-size: 48px; font-weight: bold; color: #fff; letter-spacing: 15px; 
+        }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scroll-right { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+        .row-odd .scroll-track { animation-name: scroll-left; }
+        .row-even .scroll-track { animation-name: scroll-right; }
+
+        /* 菜单层 */
+        #menu-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 4; pointer-events: none;
+        }
+        .menu-item {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            pointer-events: auto; opacity: 0;
+            transition: opacity 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            cursor: pointer;
+        }
+        .menu-item.visible { opacity: 1; }
+        #menu-a { top: 1475px; } #menu-b { top: 1614px; } #menu-c { top: 1754px; }
+        #menu-d { top: 1893px; } #menu-e { top: 2032px; }
+
+        /* ==========================================
+           4. 弹窗通用样式 (遮罩与滑动动画)
+           ========================================== */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 999;
+            background-color: rgba(0, 0, 0, 0);
+            display: none;
+            justify-content: center; align-items: center;
+            transition: background-color 0.4s ease;
+        }
+        .modal-overlay.active { background-color: rgba(0, 0, 0, 0.85); }
+
+        /* 容器保持 1080x2400 以匹配坐标，背景图强制原始尺寸并居中 */
+        .modal-window {
+            position: relative;
+            width: 1080px; 
+            height: 2400px;
+            background-size: 867px 1675px; /* 强制背景图原始尺寸 */
+            background-repeat: no-repeat;
+            background-position: center; /* 背景图在容器内居中显示 */
+            
+            opacity: 0; transform: translateY(60px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-window { opacity: 1; transform: translateY(0); }
+
+        /* ==========================================
+           5. 弹窗内部元素 (基于 1080x2400 绝对坐标)
+           ========================================== */
+        /* 文本显示区域 */
+        .text-area {
+            position: absolute;
+            left: 172px; top: 521px;
+            width: 736px; height: 1358px;
+            overflow-y: auto;
+            font-size: 36px; color: #DCDCDC;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            text-align: left;
+            padding: 0 40px;
+            
+            /* 隐藏滚动条 */
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+            /* 赞助名单居中，去除日志的边距 */            
+            #supporter-content {
+            text-align: center;
+            padding: 0;
+        }
+        .text-area::-webkit-scrollbar { display: none; }
+
+        /* 按钮点击热区 (透明按钮) */
+        .btn-hotspot {
+            position: absolute;
+            width: 260px; height: 100px;
+            background-color: transparent; border: none;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .btn-hotspot:active { transform: scale(0.95); }
+
+        /* 日志窗口专属 */
+        #log-modal .modal-window { background-image: url('system/log_bg.png'); }
+        #log-close-btn { left: 410px; top: 1901px; }
+
+        /* 赞助窗口专属 */
+        #supporter-modal .modal-window { background-image: url('system/supporter_bg.png'); }
+        #sponsor-btn { left: 240px; top: 1901px; }
+        #supporter-close-btn { left: 580px; top: 1901px; }
+
+       /* 设置窗口专属 */
+        #settings-modal .modal-window {
+            background-image: url('system/settings_bg.png');
+              }
+
+        /* 音量滑块 (轨道透明，仅作为交互热区) */
+        .volume-slider {
+            position: absolute;
+            width: 529px; 
+            height: 45px;
+            background: transparent;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* 滑块位置 */
+        #vol-global { left: 346px; top: 604px; }
+        #vol-bgm { left: 346px; top: 684px; }
+        #vol-se { left: 346px; top: 764px; }
+
+        /* 滑块头样式 - Webkit 浏览器 */
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 45px;
+            background: url('system/settings_mu.png') no-repeat center center;
+            background-size: contain;
+            margin-top: 0;
+            cursor: grab;
+        }
+        .volume-slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
+        }
+
+        /* 滑块头样式 - Firefox 浏览器 */
+        .volume-slider::-moz-range-thumb {
+            width: 20px;
+            height: 45px;
+            background: url('system/settings_mu.png') no-repeat center center;
+            background-size: contain;
+            border: none;
+            cursor: grab;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- LOGO 层 -->
+        <div id="logo-layer">
+            <img id="logo-img" src="system/logo.png" alt="Logo">
+        </div>
+
+        <!-- 标题画面层 -->
+        <div id="title-layer" style="display: none;">
+            <img id="title-a" class="layer-img" src="system/TitleA.png">
+            <div id="scroll-text-layer">
+                <div class="scroll-row row-odd"><div class="scroll-track"><div class="text-content">横看成岭侧成峰远近高低各不同不识庐山真面目只缘身在此山中</div><div class="text-content">横看成岭侧成峰远近高低各不同不识庐山真面目只缘身在此山中</div></div></div>
+                <div class="scroll-row row-even"><div class="scroll-track"><div class="text-content">岱宗夫如何齐鲁青未了造化钟神秀阴阳割昏晓荡胸生曾云决眦入归鸟会当凌绝顶一览众山小</div><div class="text-content">岱宗夫如何齐鲁青未了造化钟神秀阴阳割昏晓荡胸生曾云决入归鸟会当凌绝顶一览众山小</div></div></div>
+                <div class="scroll-row row-odd"><div class="scroll-track"><div class="text-content">远上寒山石径斜白云生处有人家停车坐爱枫林晚霜叶红于二月花</div><div class="text-content">远上寒山石径斜白云生处有人家停车坐爱枫林晚霜叶红于二月花</div></div></div>
+                <div class="scroll-row row-even"><div class="scroll-track"><div class="text-content">空山新雨后天气晚来秋明月松间照清泉石上流竹喧归浣女莲动下渔舟随意春芳歇王孙自可留</div><div class="text-content">空山新雨后天气晚来秋明月松间照清泉石上流竹喧归浣女莲动下渔舟随意春芳歇王孙自可留</div></div></div>
+                <div class="scroll-row row-odd"><div class="scroll-track"><div class="text-content">天门中断楚江开碧水东流自此回两岸青山相对出孤帆一片日边来</div><div class="text-content">天门中断楚江开碧水东流自此回两岸青山相对出孤帆一片日边来</div></div></div>
+                <div class="scroll-row row-even"><div class="scroll-track"><div class="text-content">朝辞白帝彩云间千里江陵一日还两岸猿声啼不住轻舟已过万重山</div><div class="text-content">朝辞白帝彩云间千里江陵一日还两岸猿声啼不住轻舟已过万重山</div></div></div>
+                <div class="scroll-row row-odd"><div class="scroll-track"><div class="text-content">霁天欲晓未明间满目奇峰总可观却有一峰忽然长方知不动是真山</div><div class="text-content">霁天欲晓未明间满目奇峰总可观却有一峰忽然长方知不动是真山</div></div></div>
+            </div>
+            <img id="title-b" class="layer-img" src="system/TitleB.png">
+            <div id="menu-layer">
+                <img id="menu-a" class="menu-item" src="system/MenuA.png" onclick="handleMenuClick(0)">
+                <img id="menu-b" class="menu-item" src="system/MenuB.png" onclick="handleMenuClick(1)">
+                <img id="menu-c" class="menu-item" src="system/MenuC.png" onclick="handleMenuClick(2)">
+                <img id="menu-d" class="menu-item" src="system/MenuD.png" onclick="handleMenuClick(3)">
+                <img id="menu-e" class="menu-item" src="system/MenuE.png" onclick="handleMenuClick(4)">
+            </div>
+            <img id="title-c" class="layer-img" src="system/TitleC.png">
+        </div>
+
+        <!-- 日志弹窗 -->
+        <div id="log-modal" class="modal-overlay">
+            <div class="modal-window">
+                <div class="text-area" id="log-content">\n正在加载日志</div>
+                <button class="btn-hotspot" id="log-close-btn" onclick="closeLogModal()"></button>
+            </div>
+        </div>
+
+        <!-- 赞助弹窗 -->
+        <div id="supporter-modal" class="modal-overlay">
+            <div class="modal-window">
+                <div class="text-area" id="supporter-content">\n正在加载名单</div>
+                <button class="btn-hotspot" id="sponsor-btn" onclick="openSponsorPage()"></button>
+                <button class="btn-hotspot" id="supporter-close-btn" onclick="closeSupporterModal()"></button>
+            </div>
+        </div>
+     <!-- 设置弹窗 -->
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-window settings-window">
+                <!-- 音量滑块 -->
+                <input type="range" id="vol-global" class="volume-slider" min="0" max="100" value="100">
+                <input type="range" id="vol-bgm" class="volume-slider" min="0" max="100" value="100">
+                <input type="range" id="vol-se" class="volume-slider" min="0" max="100" value="100">
+
+                <!-- 教学部分按钮热区 -->
+                <button class="btn-hotspot tutorial-btn" style="left: 207px; top: 1000px; width: 316px; height: 128px;"></button>
+                <button class="btn-hotspot tutorial-btn" style="left: 555px; top: 1000px; width: 316px; height: 128px;"></button>
+                <button class="btn-hotspot tutorial-btn" style="left: 207px; top: 1155px; width: 316px; height: 128px;"></button>
+                <button class="btn-hotspot tutorial-btn" style="left: 555px; top: 1155px; width: 316px; height: 128px;"></button>
+
+                <!-- 档案部分按钮热区 (无功能，预留接口) -->
+                <button class="btn-hotspot archive-btn" style="left: 332px; top: 1471px; width: 417px; height: 92px;"></button>
+                <button class="btn-hotspot archive-btn" style="left: 332px; top: 1603px; width: 417px; height: 92px;"></button>
+                <button class="btn-hotspot archive-btn" style="left: 332px; top: 1735px; width: 417px; height: 92px;"></button>
+
+                <!-- 关闭按钮热区 -->
+                <button class="btn-hotspot" style="left: 410px; top: 1901px; width: 260px; height: 100px;" onclick="closeSettingsModal()"></button>
+            </div>
+        </div>
+
+</div>
+
+    <script>
+        // 1. 屏幕自适应缩放
+        const container = document.getElementById('game-container');
+        function resizeGame() {
+            const scale = Math.min(window.innerWidth / 1080, window.innerHeight / 2400);
+            container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+        window.addEventListener('resize', resizeGame);
+        resizeGame();
+
+        // 2. 标题画面动画流程
+        const logoImg = document.getElementById('logo-img');
+        const logoLayer = document.getElementById('logo-layer');
+        const titleLayer = document.getElementById('title-layer');
+        const titleImgs = document.querySelectorAll('.layer-img');
+        const scrollTextLayer = document.getElementById('scroll-text-layer');
+        const menuItems = document.querySelectorAll('.menu-item');
+        let isAnimating = false;
+        let isFirstMenuEntrance = true;
+
+        function startSequence() {
+            logoImg.style.opacity = 1;
+            setTimeout(() => {
+                logoImg.style.opacity = 0;
+                setTimeout(() => {
+                    logoLayer.style.display = 'none';
+                    titleLayer.style.display = 'block';
+                    titleImgs.forEach(img => img.classList.add('visible'));
+                    setTimeout(() => { playMenuEntrance(); }, 50);
+                }, 600);
+            }, 1400);
+        }
+
+        function playMenuEntrance() {
+            isAnimating = true;
+            menuItems.forEach((item, index) => {
+                setTimeout(() => { item.classList.add('visible'); }, 50 + index * 30);
+            });
+            if (isFirstMenuEntrance) {
+                setTimeout(() => { scrollTextLayer.style.opacity = 0.15; }, 100);
+                isFirstMenuEntrance = false;
+            }
+            setTimeout(() => { isAnimating = false; }, 420);
+        }
+
+        function handleMenuClick(index) {
+            if (isAnimating) return;
+            isAnimating = true;
+            const totalMenus = menuItems.length;
+            for (let i = totalMenus - 1; i >= 0; i--) {
+                setTimeout(() => { menuItems[i].classList.remove('visible'); }, (totalMenus - 1 - i) * 30);
+            }
+            if (index === 2) { setTimeout(() => { openSettingsModal(); }, 370); return; }
+            if (index === 3) { setTimeout(() => { openLogModal(); }, 370); return; }
+            if (index === 4) { setTimeout(() => { openSupporterModal(); }, 370); return; }
+            setTimeout(() => { console.log("点击了菜单:", index); playMenuEntrance(); }, 370);
+        }
+
+        // 3. 日志弹窗逻辑
+        function openLogModal() {
+            const modal = document.getElementById('log-modal');
+            const contentDiv = document.getElementById('log-content');
+            modal.style.display = 'flex';
+            void modal.offsetWidth;
+            modal.classList.add('active');
+            contentDiv.innerHTML = '\n正在加载日志';
+            fetch('text/logs.txt')
+                .then(response => response.ok ? response.text() : Promise.reject('Error'))
+                .then(text => { contentDiv.innerText = text; setTimeout(() => { contentDiv.scrollTop = 0; }, 50); })
+                .catch(error => { contentDiv.innerText = '\n无法加载日志文件'; setTimeout(() => { contentDiv.scrollTop = 0; }, 50); });
+        }
+        function closeLogModal() {
+            const modal = document.getElementById('log-modal');
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; isAnimating = false; playMenuEntrance(); }, 200);
+        }
+
+        // 4. 赞助弹窗逻辑
+        function openSupporterModal() {
+            const modal = document.getElementById('supporter-modal');
+            const contentDiv = document.getElementById('supporter-content');
+            modal.style.display = 'flex';
+            void modal.offsetWidth;
+            modal.classList.add('active');
+            contentDiv.innerHTML = '\n正在加载名单';
+            fetch('text/supporter.txt')
+                .then(response => response.ok ? response.text() : Promise.reject('Error'))
+                .then(text => { contentDiv.innerText = text; setTimeout(() => { contentDiv.scrollTop = 0; }, 50); })
+                .catch(error => { contentDiv.innerText = '\n无法读取激励名单'; setTimeout(() => { contentDiv.scrollTop = 0; }, 50); });
+        }
+        function closeSupporterModal() {
+            const modal = document.getElementById('supporter-modal');
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; isAnimating = false; playMenuEntrance(); }, 200);
+        }
+        function openSponsorPage() { window.open('https://www.bilibili.com/', '_blank'); }
+
+       // 5. 设置弹窗逻辑
+
+        function openSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = 'flex';
+            void modal.offsetWidth;
+            modal.classList.add('active');
+            
+            // 初始化音量滑块
+            initVolumeSlider('vol-global', 'vol_global');
+            initVolumeSlider('vol-bgm', 'vol_bgm');
+            initVolumeSlider('vol-se', 'vol_se');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                isAnimating = false;
+                playMenuEntrance();
+            }, 200);
+        }
+
+        function initVolumeSlider(sliderId, storageKey) {
+            const slider = document.getElementById(sliderId);
+            const savedVol = localStorage.getItem(storageKey);
+            slider.value = savedVol !== null ? savedVol : 100;
+
+            slider.addEventListener('input', function() {
+                localStorage.setItem(storageKey, this.value);
+                console.log(`${storageKey} 音量: ${this.value}%`);
+            });
+        }
+        window.onload = startSequence;
+    </script>
+</body>
+</html>
