@@ -12,9 +12,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="不动如山">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <style>
         /* ==========================================
            1. 基础设置与字体引入
@@ -308,8 +305,25 @@
     <script>
         // 1. 屏幕自适应缩放
         const container = document.getElementById('game-container');
-            function resizeGame() {
-            const scale = window.innerWidth / 1080;
+                    function resizeGame() {
+            const targetWidth = 1080;
+            const targetHeight = 2400;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            let scale;
+            // 核心逻辑：设置宽度红线为 1080px
+            if (windowWidth < targetWidth) {
+                // 手机模式：宽度优先，填满屏幕（上下可能裁切）
+                scale = windowWidth / targetWidth;
+            } else {
+                // 平板/大屏模式：高度优先，保证画面完整（左右留黑边）
+                scale = windowHeight / targetHeight;
+                // 额外保护：如果按高度算出来的比例反而让宽度超出了（比如横屏），则取较小值
+                // 确保画面永远在屏幕内
+                if (targetWidth * scale > windowWidth) {
+                    scale = windowWidth / targetWidth;
+                }
+            }
             container.style.transform = `translate(-50%, -50%) scale(${scale})`;
         }
         window.addEventListener('resize', resizeGame);

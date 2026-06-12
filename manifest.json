@@ -3,7 +3,7 @@
   "short_name": "不动如山",
   "description": "一款包含决策、养成和构筑的兽主题文字冒险游戏。",
   "start_url": "./index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
