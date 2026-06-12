@@ -2,17 +2,19 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>不动如山</title>
     <!-- PWA 核心配置 -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#000000">
-    
     <!-- iOS (iPhone/iPad) 专属全屏配置 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="不动如山">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style>
         /* ==========================================
            1. 基础设置与字体引入
@@ -36,6 +38,8 @@
             background-color: #000;
             overflow: hidden;
             width: 100vw; height: 100vh;
+            margin: 0;
+            padding: 0;
             font-family: 'CangerShuyuanL', 'Microsoft YaHei', sans-serif;
         }
 
@@ -304,8 +308,8 @@
     <script>
         // 1. 屏幕自适应缩放
         const container = document.getElementById('game-container');
-        function resizeGame() {
-            const scale = Math.min(window.innerWidth / 1080, window.innerHeight / 2400);
+            function resizeGame() {
+            const scale = window.innerWidth / 1080;
             container.style.transform = `translate(-50%, -50%) scale(${scale})`;
         }
         window.addEventListener('resize', resizeGame);
