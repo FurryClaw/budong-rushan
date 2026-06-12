@@ -315,12 +315,12 @@
             let scale = windowWidth / targetWidth;
             let renderedHeight = targetHeight * scale;
             
-            // 2. 线性过渡：如果按宽度缩放后，上下裁切超过 7.5%（即画面高度 > 屏幕高度的 107.5%）
-            //    则锁定最大裁切为 5%，反向计算缩放比例
-            const maxAllowedHeight = windowHeight * 1.075; // 允许的最大画面高度（裁切 7.5%）
+            // 2. 线性过渡：如果按宽度缩放后，上下裁切超过 10%（即画面高度 > 屏幕高度的 110%）
+            //    则锁定最大裁切为 10%，反向计算缩放比例
+            const maxAllowedHeight = windowHeight * 1.1; // 允许的最大画面高度（裁切 10%）
             
             if (renderedHeight > maxAllowedHeight) {
-                // 锁定裁切比例为 7.5%，反向计算 scale
+                // 锁定裁切比例为 10%，反向计算 scale
                 scale = maxAllowedHeight / targetHeight;
             }
             
