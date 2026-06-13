@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "长白",
+    "image": "pic/hero/1A.png",
+    "race": "虎",
+    "talent": "15cm",
+    "class": "工匠",
+    "affection": 0,
+    "locked": false
+  },
+  {
+    "id": 2,
+    "name": "新角色",
+    "image": "pic/hero/2A.png",
+    "race": "种族",
+    "talent": "天赋",
+    "class": "职业",
+    "affection": 0,
+    "locked": true
+  },
+  {
+    "id": 3,
+    "name": "新角色",
+    "image": "pic/hero/2A.png",
+    "race": "种族",
+    "talent": "天赋",
+    "class": "职业",
+    "affection": 0,
+    "locked": true
+  },
+  {
+    "id": 4,
+    "name": "新角色",
+    "image": "pic/hero/2A.png",
+    "race": "种族",
+    "talent": "天赋",
+    "class": "职业",
+    "affection": 0,
+    "locked": true
+  },
+  {
+    "id": 5,
+    "name": "新角色",
+    "image": "pic/hero/2A.png",
+    "race": "种族",
+    "talent": "天赋",
+    "class": "职业",
+    "affection": 0,
+    "locked": true
+  },
+  {
+    "id": 6,
+    "name": "新角色",
+    "image": "pic/hero/2A.png",
+    "race": "种族",
+    "talent": "天赋",
+    "class": "职业",
+    "affection": 0,
+    "locked": true
+  }
+]

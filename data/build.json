@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "伐木场",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": false,
+    "scale": 5,
+    "code": "QSDE-4598"
+  },
+  {
+    "id": 2,
+    "name": "采石场",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": false,
+    "scale": 0,
+    "code": "ABCD-1234"
+  },
+  {
+    "id": 3,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  },
+  {
+    "id": 4,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  },
+  {
+    "id": 5,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  },
+  {
+    "id": 6,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  },
+  {
+    "id": 7,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  },
+   {
+    "id": 8,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  },
+   {
+    "id": 9,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  },
+   {
+    "id": 10,
+    "name": "兵营",
+    "description": "基础资源建筑，用于采集木材。",
+    "locked": true,
+    "scale": 0,
+    "code": "XYZW-9999"
+  }
+  ]
